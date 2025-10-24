@@ -10,6 +10,8 @@ export default function AnniversaryPage() {
   const [heartGameActive, setHeartGameActive] = useState(false)
   const [heartGameCompleted, setHeartGameCompleted] = useState(false)
   const [showWinMessage, setShowWinMessage] = useState(false)
+  const [fireworks, setFireworks] = useState<Array<{ id: number; x: number; y: number }>>([])
+  const [showConnectingLine, setShowConnectingLine] = useState(false)
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -23,6 +25,31 @@ export default function AnniversaryPage() {
 
     return () => clearInterval(interval)
   }, [])
+
+  useEffect(() => {
+    if (currentPage === 4) {
+      setShowConnectingLine(false)
+      const timer = setTimeout(() => {
+        setShowConnectingLine(true)
+        // Trigger fireworks
+        const fireworksInterval = setInterval(() => {
+          const newFirework = {
+            id: Date.now() + Math.random(),
+            x: Math.random() * 100,
+            y: Math.random() * 100,
+          }
+          setFireworks((prev) => [...prev.slice(-20), newFirework])
+        }, 100)
+
+        return () => clearInterval(fireworksInterval)
+      }, 5000)
+
+      return () => clearTimeout(timer)
+    } else {
+      setShowConnectingLine(false)
+      setFireworks([])
+    }
+  }, [currentPage])
 
   const pages = [
     {
@@ -58,7 +85,7 @@ export default function AnniversaryPage() {
       title: "Here's to Us",
       subtitle: "And Many More Years",
       content:
-        "Let's continue writing our love story together. With you by my side, I know the best is yet to come. Happy Anniversary to the Favorite Person of my life.",
+        "Let's continue writing our love story together. With you by my side, I know the best is yet to come. Happy Anniversary to the love of my life.",
       emoji: "💑",
     },
   ]
@@ -109,6 +136,20 @@ export default function AnniversaryPage() {
             }}
           >
             ✨
+          </div>
+        ))}
+        {fireworks.map((firework) => (
+          <div
+            key={firework.id}
+            className="absolute text-3xl"
+            style={{
+              left: `${firework.x}%`,
+              top: `${firework.y}%`,
+              animation: `fireworks 1.5s ease-out forwards`,
+              pointerEvents: "none",
+            }}
+          >
+            💕
           </div>
         ))}
       </div>
@@ -194,6 +235,17 @@ export default function AnniversaryPage() {
           }
         }
 
+        @keyframes fireworks {
+          0% {
+            transform: translate(0, 0) scale(1);
+            opacity: 1;
+          }
+          100% {
+            transform: translate(var(--tx), var(--ty)) scale(0);
+            opacity: 0;
+          }
+        }
+
         .animate-heart-beat {
           animation: heartBeat 1.5s ease-in-out infinite;
         }
@@ -217,6 +269,10 @@ export default function AnniversaryPage() {
 
         .floating-heart {
           animation: float-up 2s ease-out forwards;
+        }
+
+        .connecting-line {
+          animation: drawLine 1.5s ease-in-out forwards;
         }
       `}</style>
 
@@ -245,15 +301,43 @@ export default function AnniversaryPage() {
                 {currentPageData.content}
               </p>
               {currentPageData.hasImage && (
-                <div className="flex justify-center">
-                  <div className="relative w-full max-w-sm h-96 rounded-lg overflow-hidden shadow-lg">
-                    <Image
-                      src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-10-24%20at%2017.06.51_20c09b74-K7jXb5oYDIWf6JWF2cs0Iy7TUWJEdL.jpg"
-                      alt="Our special moment"
-                      fill
-                      className="object-cover"
-                    />
+                <div className="space-y-8">
+                  <div className="flex justify-center">
+                    <div className="relative w-full max-w-sm h-96 rounded-lg overflow-hidden shadow-lg">
+                      <Image
+                        src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202025-10-24%20at%2017.06.51_20c09b74-K7jXb5oYDIWf6JWF2cs0Iy7TUWJEdL.jpg"
+                        alt="Our special moment"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
                   </div>
+                  {showConnectingLine && (
+                    <div className="flex justify-center items-center">
+                      <svg width="300" height="100" viewBox="0 0 300 100" className="relative">
+                        {/* Left heart */}
+                        <text x="30" y="50" fontSize="40" textAnchor="middle" dominantBaseline="middle">
+                          💕
+                        </text>
+
+                        {/* Right heart */}
+                        <text x="270" y="50" fontSize="40" textAnchor="middle" dominantBaseline="middle">
+                          💕
+                        </text>
+
+                        {/* Connecting line */}
+                        <line
+                          x1="70"
+                          y1="50"
+                          x2="230"
+                          y2="50"
+                          stroke="#ec4899"
+                          strokeWidth="3"
+                          className="connecting-line"
+                        />
+                      </svg>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -285,6 +369,16 @@ export default function AnniversaryPage() {
                     className={heartGameCompleted ? "heart-line" : "opacity-30"}
                   />
 
+                  {/* Right line */}
+                  <line
+                    x1="170"
+                    y1="100"
+                    x2="230"
+                    y2="100"
+                    stroke="#ec4899"
+                    strokeWidth="3"
+                    className={heartGameCompleted ? "heart-line" : "opacity-30"}
+                  />
                 </svg>
               </div>
 
@@ -358,14 +452,16 @@ export default function AnniversaryPage() {
               {currentPage + 1} / {pages.length}
             </div>
 
-            <button
-              onClick={handleNext}
-              disabled={isLastPage}
-              className="px-6 py-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-            >
-              Next
-              <ChevronRight size={18} />
-            </button>
+            {!isLastPage && (
+              <button
+                onClick={handleNext}
+                className="px-6 py-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center gap-2"
+              >
+                Next
+                <ChevronRight size={18} />
+              </button>
+            )}
+            {isLastPage && <div className="px-6 py-2" />}
           </div>
 
           {/* Footer */}
