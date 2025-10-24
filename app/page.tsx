@@ -85,7 +85,7 @@ export default function AnniversaryPage() {
       title: "Here's to Us",
       subtitle: "And Many More Years",
       content:
-        "Let's continue writing our love story together. With you by my side, I know the best is yet to come. Happy Anniversary to the love of my life.",
+        "Let's continue writing our story together. With you by my side, I know the best is yet to come. Happy Anniversary to the love of my life.",
       emoji: "💑",
     },
   ]
